@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Productos | Inventario</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="logo">📦 Inventario</div>
+
+    <nav class="menu">
+        <a href="#" class="active">Productos</a>
+        <a th:href="@{/movimientos}">Movimientos</a>
+        <a th:href="@{/reportes/stock-minimo}">Reporte stock minimo</a>
+        <a th:href="@{/logout}">Salir</a>
+
+    </nav>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+    <!-- HEADER -->
+    <div class="header">
+
+        <div class="page-header">
+            <h2 class="page-title">Productos</h2>
+
+            <a th:href="@{/productos/nuevo}" class="btn-primary">
+                Añadir
+            </a>
+        </div>
+
+
+        <!-- Buscador -->
+        <div class="search-container">
+            <form method="get" th:action="@{/productos}" class="search-form">
+                <input
+                        type="text"
+                        name="busqueda"
+                        placeholder="Buscar producto..."
+                        th:value="${busqueda}"
+                        class="search-input"
+                >
+                <button type="submit" class="search-btn">🔍</button>
+                <a th:href="@{/productos}" class="clear-btn">✖</a>
+            </form>
+        </div>
+    </div>
+
+    <!-- CARD -->
+    <div class="card">
+
+        <table>
+            <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <!-- Si hay productos -->
+            <tr th:each="p : ${productos}">
+                <td th:text="${p.codigo}"></td>
+                <td th:text="${p.nombre}"></td>
+                <td><span class="badge" th:text="${p.categoria}"></span></td>
+                <td class="precio" th:text="'₡' + ${p.precio}"></td>
+                <td class="stock" th:text="${p.stock}"></td> <!-- mostrar stock -->
+                <td class="actions">
+                    <a th:href="@{/productos/editar/{codigo}(codigo=${p.codigo})}"
+                       class="edit-btn">Editar</a>
+
+                    <form th:action="@{/productos/eliminar}" method="post" style="display:inline">
+                        <input type="hidden" name="codigo" th:value="${p.codigo}">
+                        <button type="submit"
+                                class="delete-btn"
+                                onclick="return confirm('¿Eliminar producto?')">
+                            Eliminar
+                        </button>
+                    </form>
+                </td>
+            </tr>
+
+            <!-- Si NO hay productos -->
+            <tr th:if="${#lists.isEmpty(productos)}">
+                <td colspan="6" style="text-align: center; font-style: italic;">
+                    No hay resultados
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+
+        <!-- PAGINATION -->
+        <div class="pagination">
+            <button>&lt;</button>
+            <button class="active">1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>&gt;</button>
+        </div>
+
+    </div>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar producto</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+
+<body>
+
+<main class="main">
+
+    <div class="form-wrapper">
+
+        <div class="card form-card">
+
+            <h2 class="form-title">Editar producto</h2>
+            <p class="form-subtitle">Actualiza la información del producto</p>
+
+            <form th:action="@{/productos/editar}" method="post" class="form">
+
+                <input type="hidden" name="codigo" th:value="${producto.codigo}">
+
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" name="nombre"
+                           th:value="${producto.nombre}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <input type="text" name="categoria"
+                           th:value="${producto.categoria}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Precio</label>
+                    <input type="number" step="0.01" name="precio"
+                           th:value="${producto.precio}" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Guardar cambios</button>
+                    <a th:href="@{/productos}" class="btn-secondary">Cancelar</a>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</main>
+
+</body>
+</html>

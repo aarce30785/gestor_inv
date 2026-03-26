@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Stock Mínimo</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="logo">📦 Inventario</div>
+    <nav class="menu">
+        <a th:href="@{/productos}">Productos</a>
+        <a th:href="@{/movimientos}">Movimientos</a>
+        <a href="#" class="active">Reportes</a>
+        <a th:href="@{/logout}">Salir</a>
+    </nav>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+    <!-- HEADER -->
+    <div class="header">
+        <h2>Productos con Stock Mínimo</h2>
+    </div>
+
+    <!-- CARD -->
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Cantidad Actual</th>
+                <th>Stock Mínimo</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="p : ${productos}">
+                <td th:text="${p.codigo}"></td>
+                <td th:text="${p.nombre}"></td>
+                <td th:text="${p.cantidadActual}"></td>
+                <td th:text="${p.stockMinimo}"></td>
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(productos)}">
+                <td colspan="4" style="text-align:center; font-style: italic; opacity:0.6;">
+                    Todos los productos están por encima del stock mínimo
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+
+<body style="justify-content:center; align-items:center;">
+
+<div class="card" style="width:360px">
+
+    <h2 style="margin-bottom:20px; text-align:center;">🔐 Iniciar sesión</h2>
+
+    <div th:if="${error}" class="error-box">
+        ⚠️ <span th:text="${error}"></span>
+    </div>
+
+    <form method="post" th:action="@{/login}">
+        <div class="form-group">
+            <label>Usuario</label>
+            <input class="search" type="text" name="username" required>
+        </div>
+
+        <div class="form-group">
+            <label>Contraseña</label>
+            <input class="search" type="password" name="password" required>
+        </div>
+
+        <div class="form-actions" style="justify-content:center;">
+            <button class="search-btn" style="width:100%">Entrar</button>
+        </div>
+    </form>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${title} ?: 'Dashboard'"></title>
+  <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">📦 Inventario</div>
+
+  <nav class="menu">
+    <a th:href="@{/productos}" class="active">Productos</a>
+    <a href="#">Movimientos</a>
+    <a href="#">Reportes</a>
+    <a href="#">Usuarios</a>
+    <a href="#">Salir</a>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- acá se inyecta el contenido -->
+  <div th:fragment="content"></div>
+</main>
+
+</body>
+</html>

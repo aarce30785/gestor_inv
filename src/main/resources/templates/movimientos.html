@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Movimientos</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="logo">📦 Inventario</div>
+
+    <nav class="menu">
+        <a th:href="@{/productos}">Productos</a>
+        <a href="#" class="active">Movimientos</a>
+        <a th:href="@{/reportes/stock-minimo}">Reporte stock minimo</a>
+        <a th:href="@{/logout}">Salir</a>
+
+    </nav>
+</aside>
+
+<main class="main">
+
+    <!-- HEADER -->
+    <div class="header">
+        <h2>Movimientos de Inventario</h2>
+    </div>
+
+
+    <!-- FORM CARD -->
+    <form method="post"
+          th:action="@{/movimientos/registrar}"
+          class="card"
+          style="max-width:520px; margin-bottom:30px;">
+
+        <h3 style="margin-bottom:15px;">Registrar movimiento</h3>
+
+        <!-- ERROR -->
+        <div th:if="${error}" class="error-box">
+            ⚠️ <span th:text="${error}"></span>
+        </div>
+
+        <div class="form-group">
+            <label>Código del producto</label>
+            <input class="search"
+                   name="codigoProducto"
+                   placeholder="PRD-001"
+                   pattern="PRD-[0-9]{3}"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label>Tipo de movimiento</label>
+            <select class="search" name="tipo" required>
+                <option value="">Seleccionar</option>
+                <option value="ENTRADA">Entrada</option>
+                <option value="SALIDA">Salida</option>
+                <option value="AJUSTE">Ajuste</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Cantidad</label>
+            <input class="search"
+                   type="number"
+                   name="cantidad"
+                   min="1"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label>Stock minimo</label>
+            <input class="search"
+                   type="number"
+                   name="stockMinimo"
+                   min="0"
+                   placeholder="Opcional">
+        </div>
+
+        <div class="form-group">
+            <label>Observación</label>
+            <input class="search"
+                   name="observacion"
+                   placeholder="Opcional">
+        </div>
+
+        <div class="form-actions">
+            <button class="search-btn">Registrar</button>
+        </div>
+
+    </form>
+
+    <!-- TABLE CARD -->
+    <div class="card">
+
+        <h3 style="margin-bottom:15px;">Historial reciente</h3>
+
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Fecha</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="m : ${movimientos}">
+                <td th:text="${m.codigoProducto}"></td>
+
+                <td>
+                    <span th:text="${m.tipo}"
+                          th:classappend="${m.tipo == 'ENTRADA' ? ' badge green' :
+                                           m.tipo == 'SALIDA' ? ' badge red' :
+                                           ' badge yellow'}">
+                    </span>
+                </td>
+
+                <td th:text="${m.cantidad}"></td>
+
+                <td th:text="${#dates.format(m.fecha, 'dd/MM/yyyy HH:mm')}"></td>
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(movimientos)}">
+                <td colspan="4" style="text-align:center; opacity:.6;">
+                    Sin movimientos registrados
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+    </div>
+
+</main>
+
+</body>
+</html>
