@@ -6,7 +6,6 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -61,10 +60,10 @@ public class MovimientoDAO {
             return "La cantidad debe ser mayor a cero.";
         }
         if (message.contains("ORA-20001") && message.toLowerCase().contains("tipo")) {
-            return "Tipo de movimiento inválido.";
+            return "Tipo de movimiento invalido.";
         }
         if (message.contains("ORA-20002")) {
-            return "El producto o el usuario no existe o está inactivo.";
+            return "El producto o el usuario no existe o esta inactivo.";
         }
 
         return "No fue posible registrar el movimiento.";
@@ -75,33 +74,37 @@ public class MovimientoDAO {
     }
 
     public List<MovimientoDTO> listarMovimientosRecientes(int limite) {
-
         if (limite < 1) {
             limite = 5;
         }
 
-        if (limite > 50) {
-            limite = 50;
+        // El procedimiento actual devuelve hasta 5 filas.
+        if (limite > 5) {
+            limite = 5;
         }
+
+        List<MovimientoDTO> movimientos = listarMovimientosViaProcedure();
+        if (movimientos.size() <= limite) {
+            return movimientos;
+        }
+
+        return new ArrayList<>(movimientos.subList(0, limite));
+    }
+
+    public List<MovimientoDTO> listarMovimientosViaProcedure() {
 
         List<MovimientoDTO> lista = new ArrayList<>();
 
-        String sql = """
-                SELECT p.codigo,
-                       m.tipo_movimiento,
-                       m.cantidad,
-                       m.fecha_movimiento
-                FROM movimiento m
-                JOIN producto p ON p.id_producto = m.id_producto
-                ORDER BY m.fecha_movimiento DESC
-                FETCH FIRST ? ROWS ONLY
-                """;
+        String sql = "{ call pkg_movimientos.sp_listar_movimientos_cursor(?) }";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             CallableStatement cs = conn.prepareCall(sql)) {
 
-            ps.setInt(1, limite);
-            try (ResultSet rs = ps.executeQuery()) {
+            cs.registerOutParameter(1, Types.REF_CURSOR);
+
+            cs.execute();
+
+            try (ResultSet rs = (ResultSet) cs.getObject(1)) {
                 while (rs.next()) {
                     lista.add(new MovimientoDTO(
                             rs.getString(1),
@@ -110,70 +113,6 @@ public class MovimientoDAO {
                             rs.getTimestamp(4)
                     ));
                 }
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Error listando movimientos recientes", e);
-        }
-
-        return lista;
-    }
-
-    public List<MovimientoDTO> listarMovimientosViaProcedure() {
-
-        List<MovimientoDTO> lista = new ArrayList<>();
-
-        String sql = "{ call pkg_movimientos.sp_listar_movimientos(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) }";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
-
-            int i = 1;
-
-            cs.registerOutParameter(i++, Types.INTEGER); // p_total
-
-            // prod1
-            cs.registerOutParameter(i++, Types.VARCHAR);
-            cs.registerOutParameter(i++, Types.VARCHAR);
-            cs.registerOutParameter(i++, Types.INTEGER);
-            cs.registerOutParameter(i++, Types.DATE);
-
-            // prod2
-            cs.registerOutParameter(i++, Types.VARCHAR);
-            cs.registerOutParameter(i++, Types.VARCHAR);
-            cs.registerOutParameter(i++, Types.INTEGER);
-            cs.registerOutParameter(i++, Types.DATE);
-
-            // prod3
-            cs.registerOutParameter(i++, Types.VARCHAR);
-            cs.registerOutParameter(i++, Types.VARCHAR);
-            cs.registerOutParameter(i++, Types.INTEGER);
-            cs.registerOutParameter(i++, Types.DATE);
-
-            // prod4
-            cs.registerOutParameter(i++, Types.VARCHAR);
-            cs.registerOutParameter(i++, Types.VARCHAR);
-            cs.registerOutParameter(i++, Types.INTEGER);
-            cs.registerOutParameter(i++, Types.DATE);
-
-            // prod5
-            cs.registerOutParameter(i++, Types.VARCHAR);
-            cs.registerOutParameter(i++, Types.VARCHAR);
-            cs.registerOutParameter(i++, Types.INTEGER);
-            cs.registerOutParameter(i, Types.DATE);
-
-            cs.execute();
-
-            int total = cs.getInt(1);
-            int index = 2;
-
-            for (int n = 0; n < total; n++) {
-                lista.add(new MovimientoDTO(
-                        cs.getString(index++), // codigo
-                        cs.getString(index++), // tipo
-                        cs.getInt(index++),    // cantidad
-                        cs.getDate(index++)    // fecha
-                ));
             }
 
         } catch (SQLException e) {

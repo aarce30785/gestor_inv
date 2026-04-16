@@ -4,11 +4,12 @@ import org.example.db.DatabaseConnection;
 import org.example.dto.HistorialProductoDTO;
 import org.springframework.stereotype.Repository;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.Date;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,56 +28,39 @@ public class HistorialProductoDAO {
     ) {
         List<HistorialProductoDTO> historial = new ArrayList<>();
 
-        StringBuilder sql = new StringBuilder("""
-                SELECT codigo,
-                       tipo_operacion,
-                       nombre_anterior,
-                       nombre_nuevo,
-                       categoria_anterior,
-                       categoria_nueva,
-                       precio_anterior,
-                       precio_nuevo,
-                       activo_anterior,
-                       activo_nuevo,
-                       usuario_responsable,
-                       fecha_operacion
-                FROM historial_producto
-                WHERE 1 = 1
-                """);
-
-        List<Object> params = new ArrayList<>();
-
-        if (operacion != null && !operacion.trim().isEmpty()) {
-            sql.append(" AND tipo_operacion = ?");
-            params.add(operacion.trim());
-        }
-
-        if (usuario != null && !usuario.trim().isEmpty()) {
-            sql.append(" AND UPPER(usuario_responsable) LIKE ?");
-            params.add("%" + usuario.trim().toUpperCase() + "%");
-        }
-
-        if (fechaDesde != null) {
-            sql.append(" AND fecha_operacion >= ?");
-            params.add(fechaDesde);
-        }
-
-        if (fechaHastaExclusiva != null) {
-            sql.append(" AND fecha_operacion < ?");
-            params.add(fechaHastaExclusiva);
-        }
-
-        sql.append(" ORDER BY fecha_operacion DESC FETCH FIRST 40 ROWS ONLY");
+        String sql = "{ call pkg_historial_producto.sp_listar_historial_filtrado(?, ?, ?, ?, ?) }";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+             CallableStatement cs = conn.prepareCall(sql)) {
 
-            for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+            if (operacion == null || operacion.trim().isEmpty()) {
+                cs.setNull(1, Types.VARCHAR);
+            } else {
+                cs.setString(1, operacion.trim());
             }
 
-            try (ResultSet rs = ps.executeQuery()) {
+            if (usuario == null || usuario.trim().isEmpty()) {
+                cs.setNull(2, Types.VARCHAR);
+            } else {
+                cs.setString(2, usuario.trim());
+            }
 
+            if (fechaDesde == null) {
+                cs.setNull(3, Types.DATE);
+            } else {
+                cs.setDate(3, fechaDesde);
+            }
+
+            if (fechaHastaExclusiva == null) {
+                cs.setNull(4, Types.DATE);
+            } else {
+                cs.setDate(4, fechaHastaExclusiva);
+            }
+
+            cs.registerOutParameter(5, Types.REF_CURSOR);
+            cs.execute();
+
+            try (ResultSet rs = (ResultSet) cs.getObject(5)) {
                 while (rs.next()) {
                     historial.add(new HistorialProductoDTO(
                             rs.getString("codigo"),

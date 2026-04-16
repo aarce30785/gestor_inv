@@ -15,67 +15,26 @@ public class ProductoDAO {
     public List<ProductoDTO> listarProductos(String busqueda) {
         List<ProductoDTO> productos = new ArrayList<>();
 
-        String sql = "{ call pkg_productos.sp_listar_productos(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) }"; // 27 parámetros
+        String sql = "{ call pkg_productos.sp_listar_productos_cursor(?, ?) }";
 
         try (Connection conn = DatabaseConnection.getConnection();
              CallableStatement cs = conn.prepareCall(sql)) {
 
-            // IN
             cs.setString(1, busqueda);
+            cs.registerOutParameter(2, Types.REF_CURSOR);
 
-            // OUT
-            cs.registerOutParameter(2, Types.INTEGER); // p_total
-
-            // Producto 1
-            cs.registerOutParameter(3, Types.VARCHAR);  // p_cod1
-            cs.registerOutParameter(4, Types.VARCHAR);  // p_nom1
-            cs.registerOutParameter(5, Types.VARCHAR);  // p_cat1
-            cs.registerOutParameter(6, Types.NUMERIC);  // p_pre1
-            cs.registerOutParameter(7, Types.INTEGER);  // p_stock1
-
-            // Producto 2
-            cs.registerOutParameter(8, Types.VARCHAR);  // p_cod2
-            cs.registerOutParameter(9, Types.VARCHAR);  // p_nom2
-            cs.registerOutParameter(10, Types.VARCHAR); // p_cat2
-            cs.registerOutParameter(11, Types.NUMERIC);// p_pre2
-            cs.registerOutParameter(12, Types.INTEGER);// p_stock2
-
-            // Producto 3
-            cs.registerOutParameter(13, Types.VARCHAR);// p_cod3
-            cs.registerOutParameter(14, Types.VARCHAR);// p_nom3
-            cs.registerOutParameter(15, Types.VARCHAR);// p_cat3
-            cs.registerOutParameter(16, Types.NUMERIC);// p_pre3
-            cs.registerOutParameter(17, Types.INTEGER);// p_stock3
-
-            // Producto 4
-            cs.registerOutParameter(18, Types.VARCHAR);// p_cod4
-            cs.registerOutParameter(19, Types.VARCHAR);// p_nom4
-            cs.registerOutParameter(20, Types.VARCHAR);// p_cat4
-            cs.registerOutParameter(21, Types.NUMERIC);// p_pre4
-            cs.registerOutParameter(22, Types.INTEGER);// p_stock4
-
-            // Producto 5
-            cs.registerOutParameter(23, Types.VARCHAR);// p_cod5
-            cs.registerOutParameter(24, Types.VARCHAR);// p_nom5
-            cs.registerOutParameter(25, Types.VARCHAR);// p_cat5
-            cs.registerOutParameter(26, Types.NUMERIC);// p_pre5
-            cs.registerOutParameter(27, Types.INTEGER);// p_stock5
-
-            // Ejecutar procedure
             cs.execute();
 
-            int total = cs.getInt(2);
-
-            for (int i = 1; i <= total; i++) {
-                int base = 3 + (i - 1) * 5; //  5 parámetros por producto
-
-                productos.add(new ProductoDTO(
-                        cs.getString(base),        // codigo
-                        cs.getString(base + 1),    // nombre
-                        cs.getString(base + 2),    // categoria
-                        cs.getBigDecimal(base + 3),// precio
-                        cs.getInt(base + 4)        // stock
-                ));
+            try (ResultSet rs = (ResultSet) cs.getObject(2)) {
+                while (rs.next()) {
+                    productos.add(new ProductoDTO(
+                            rs.getString(1),
+                            rs.getString(2),
+                            rs.getString(3),
+                            rs.getBigDecimal(4),
+                            rs.getInt(5)
+                    ));
+                }
             }
 
         } catch (SQLException e) {

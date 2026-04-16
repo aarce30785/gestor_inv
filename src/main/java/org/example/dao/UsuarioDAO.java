@@ -6,9 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,23 +57,23 @@ public class UsuarioDAO {
     public List<UsuarioDTO> listarUsuarios() {
         List<UsuarioDTO> usuarios = new ArrayList<>();
 
-        String sql = """
-                SELECT username, rol, activo, fecha_creacion
-                FROM usuario
-                ORDER BY fecha_creacion DESC
-                """;
+        String sql = "{ call pkg_usuarios.sp_listar_usuarios(?) }";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+             CallableStatement cs = conn.prepareCall(sql)) {
 
-            while (rs.next()) {
-                usuarios.add(new UsuarioDTO(
-                        rs.getString("username"),
-                        rs.getString("rol"),
-                        rs.getString("activo"),
-                        rs.getDate("fecha_creacion")
-                ));
+            cs.registerOutParameter(1, Types.REF_CURSOR);
+            cs.execute();
+
+            try (ResultSet rs = (ResultSet) cs.getObject(1)) {
+                while (rs.next()) {
+                    usuarios.add(new UsuarioDTO(
+                            rs.getString("username"),
+                            rs.getString("rol"),
+                            rs.getString("activo"),
+                            rs.getDate("fecha_creacion")
+                    ));
+                }
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error listando usuarios", e);

@@ -7,7 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -51,41 +50,35 @@ public class CompraProveedorDAO {
     public List<CompraProveedorDTO> listarComprasRecientes() {
         List<CompraProveedorDTO> compras = new ArrayList<>();
 
-        String sql = """
-                SELECT c.fecha_compra,
-                       p.codigo,
-                       pr.nombre AS proveedor,
-                       c.cantidad,
-                       c.costo_unitario,
-                       u.username
-                FROM compra_proveedor c
-                JOIN producto p ON p.id_producto = c.id_producto
-                JOIN proveedor pr ON pr.id_proveedor = c.id_proveedor
-                JOIN usuario u ON u.id_usuario = c.id_usuario
-                ORDER BY c.fecha_compra DESC
-                FETCH FIRST 10 ROWS ONLY
-                """;
+        String sql = "{ call pkg_proveedores.sp_listar_compras_recientes(?) }";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+             CallableStatement cs = conn.prepareCall(sql)) {
 
-            while (rs.next()) {
-                compras.add(new CompraProveedorDTO(
-                        rs.getTimestamp("fecha_compra"),
-                        rs.getString("codigo"),
-                        rs.getString("proveedor"),
-                        rs.getInt("cantidad"),
-                        rs.getBigDecimal("costo_unitario"),
-                        rs.getString("username")
-                ));
+            cs.registerOutParameter(1, Types.REF_CURSOR);
+
+            cs.execute();
+
+            try (ResultSet rs = (ResultSet) cs.getObject(1)) {
+                while (rs.next()) {
+                    compras.add(new CompraProveedorDTO(
+                            rs.getTimestamp(1),
+                            rs.getString(2),
+                            rs.getString(3),
+                            rs.getInt(4),
+                            rs.getBigDecimal(5),
+                            rs.getString(6)
+                    ));
+                }
             }
+
         } catch (SQLException e) {
             throw new RuntimeException("Error listando compras recientes", e);
         }
 
         return compras;
     }
+
 
     private String mapCompraError(SQLException e) {
         String message = e.getMessage();
@@ -94,19 +87,18 @@ public class CompraProveedorDAO {
         }
 
         if (message.contains("ORA-20201")) {
-            return "El producto seleccionado no existe o está inactivo.";
+            return "El producto seleccionado no existe o esta inactivo.";
         }
         if (message.contains("ORA-20202")) {
-            return "El proveedor seleccionado no existe o está inactivo.";
+            return "El proveedor seleccionado no existe o esta inactivo.";
         }
         if (message.contains("ORA-20203")) {
-            return "El producto no está asociado al proveedor seleccionado.";
+            return "El producto no esta asociado al proveedor seleccionado.";
         }
         if (message.contains("ORA-20011")) {
-            return "No se pudo aplicar el movimiento de stock por validación de inventario.";
+            return "No se pudo aplicar el movimiento de stock por validacion de inventario.";
         }
 
         return "No se pudo registrar la compra.";
     }
 }
-

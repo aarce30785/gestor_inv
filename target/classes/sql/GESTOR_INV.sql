@@ -216,6 +216,12 @@ CREATE OR REPLACE PACKAGE pkg_productos AS
         p_cod5 OUT VARCHAR2, p_nom5 OUT VARCHAR2, p_cat5 OUT VARCHAR2, p_pre5 OUT NUMBER, p_stock5 OUT NUMBER
     );
 
+    -- Listado de productos sin limite fijo (cursor dinamico)
+    PROCEDURE sp_listar_productos_cursor (
+        p_busqueda IN VARCHAR2 DEFAULT NULL,
+        p_cursor   OUT SYS_REFCURSOR
+    );
+
     PROCEDURE sp_editar_producto(
         p_codigo      IN VARCHAR2,
         p_nombre      IN VARCHAR2,
@@ -368,6 +374,34 @@ EXCEPTION
         RAISE_APPLICATION_ERROR(-20100, 'Error al listar productos');
 END sp_listar_productos;
 
+PROCEDURE sp_listar_productos_cursor (
+    p_busqueda IN VARCHAR2 DEFAULT NULL,
+    p_cursor   OUT SYS_REFCURSOR
+) IS
+    v_busqueda VARCHAR2(100);
+BEGIN
+    v_busqueda := CASE WHEN TRIM(p_busqueda) IS NULL THEN NULL ELSE p_busqueda END;
+
+    OPEN p_cursor FOR
+        SELECT p.codigo,
+               p.nombre,
+               p.categoria,
+               p.precio_unitario,
+               NVL(i.cantidad_actual, 0) AS stock
+        FROM producto p
+        LEFT JOIN inventario i ON i.id_producto = p.id_producto
+        WHERE p.activo = 'S'
+          AND (
+                v_busqueda IS NULL
+                OR UPPER(p.codigo) LIKE '%' || UPPER(v_busqueda) || '%'
+                OR UPPER(p.nombre) LIKE '%' || UPPER(v_busqueda) || '%'
+              )
+        ORDER BY p.fecha_creacion;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20102, 'Error al listar productos (cursor)');
+END sp_listar_productos_cursor;
+
 
 PROCEDURE sp_editar_producto(
     p_codigo      IN VARCHAR2,
@@ -455,6 +489,11 @@ CREATE OR REPLACE PACKAGE pkg_movimientos AS
         p_prod3 OUT VARCHAR2, p_tipo3 OUT VARCHAR2, p_cant3 OUT NUMBER, p_fecha3 OUT DATE,
         p_prod4 OUT VARCHAR2, p_tipo4 OUT VARCHAR2, p_cant4 OUT NUMBER, p_fecha4 OUT DATE,
         p_prod5 OUT VARCHAR2, p_tipo5 OUT VARCHAR2, p_cant5 OUT NUMBER, p_fecha5 OUT DATE
+    );
+
+    -- Listado de movimientos sin limite fijo (cursor dinamico)
+    PROCEDURE sp_listar_movimientos_cursor (
+        p_cursor OUT SYS_REFCURSOR
     );
 
 END pkg_movimientos;
@@ -567,6 +606,23 @@ EXCEPTION
         RAISE_APPLICATION_ERROR(-20003, 'Error al listar movimientos');
 END sp_listar_movimientos;
 
+PROCEDURE sp_listar_movimientos_cursor (
+    p_cursor OUT SYS_REFCURSOR
+) IS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT p.codigo,
+               m.tipo_movimiento,
+               m.cantidad,
+               m.fecha_movimiento
+        FROM movimiento m
+        JOIN producto p ON p.id_producto = m.id_producto
+        ORDER BY m.fecha_movimiento DESC;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20004, 'Error al listar movimientos (cursor)');
+END sp_listar_movimientos_cursor;
+
 END pkg_movimientos;
 /
 
@@ -592,6 +648,24 @@ CREATE OR REPLACE PACKAGE pkg_proveedores AS
         p_costo_unitario  IN NUMBER,
         p_observacion     IN VARCHAR2,
         p_stock_minimo    IN NUMBER DEFAULT NULL
+    );
+
+    -- Listado de compras recientes sin limite fijo (cursor dinamico)
+    PROCEDURE sp_listar_compras_recientes (
+        p_cursor OUT SYS_REFCURSOR
+    );
+
+    -- Listados auxiliares para UI de proveedores
+    PROCEDURE sp_listar_proveedores_activos (
+        p_cursor OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE sp_listar_productos_activos (
+        p_cursor OUT SYS_REFCURSOR
+    );
+
+    PROCEDURE sp_listar_asociaciones_activas (
+        p_cursor OUT SYS_REFCURSOR
     );
 
 END pkg_proveedores;
@@ -730,6 +804,77 @@ EXCEPTION
         RAISE_APPLICATION_ERROR(-20299, 'Error al registrar compra');
 END sp_registrar_compra;
 
+PROCEDURE sp_listar_compras_recientes (
+    p_cursor OUT SYS_REFCURSOR
+) IS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT c.fecha_compra,
+               p.codigo,
+               pr.nombre,
+               c.cantidad,
+               c.costo_unitario,
+               u.username
+        FROM compra_proveedor c
+        JOIN producto  p  ON p.id_producto = c.id_producto
+        JOIN proveedor pr ON pr.id_proveedor = c.id_proveedor
+        JOIN usuario   u  ON u.id_usuario = c.id_usuario
+        ORDER BY c.fecha_compra DESC;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20298, 'Error al listar compras recientes');
+END sp_listar_compras_recientes;
+
+PROCEDURE sp_listar_proveedores_activos (
+    p_cursor OUT SYS_REFCURSOR
+) IS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT id_proveedor, nombre, telefono, email, activo
+        FROM proveedor
+        WHERE activo = 'S'
+        ORDER BY nombre;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20297, 'Error al listar proveedores activos');
+END sp_listar_proveedores_activos;
+
+PROCEDURE sp_listar_productos_activos (
+    p_cursor OUT SYS_REFCURSOR
+) IS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT codigo, nombre, categoria
+        FROM producto
+        WHERE activo = 'S'
+        ORDER BY nombre;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20296, 'Error al listar productos activos');
+END sp_listar_productos_activos;
+
+PROCEDURE sp_listar_asociaciones_activas (
+    p_cursor OUT SYS_REFCURSOR
+) IS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT p.codigo,
+               p.nombre AS nombre_producto,
+               pr.id_proveedor,
+               pr.nombre AS nombre_proveedor
+        FROM producto_proveedor pp
+        JOIN producto p ON p.id_producto = pp.id_producto
+        JOIN proveedor pr ON pr.id_proveedor = pp.id_proveedor
+        WHERE pp.activo = 'S'
+          AND p.activo = 'S'
+          AND pr.activo = 'S'
+        ORDER BY pr.nombre, p.nombre;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20295, 'Error al listar asociaciones activas');
+END sp_listar_asociaciones_activas;
+
 END pkg_proveedores;
 /
 
@@ -858,6 +1003,11 @@ CREATE OR REPLACE PACKAGE pkg_reportes_stock AS
         p_cod5 OUT VARCHAR2, p_nom5 OUT VARCHAR2, p_cant5 OUT NUMBER, p_min5 OUT NUMBER
     );
 
+    -- Reporte de stock minimo sin limite fijo (cursor dinamico)
+    PROCEDURE sp_reporte_stock_minimo_cursor (
+        p_cursor OUT SYS_REFCURSOR
+    );
+
 END pkg_reportes_stock;
 /
 
@@ -916,6 +1066,25 @@ EXCEPTION
         RAISE_APPLICATION_ERROR(-20030, 'Error al generar reporte de stock minimo');
 END sp_reporte_stock_minimo;
 
+PROCEDURE sp_reporte_stock_minimo_cursor (
+    p_cursor OUT SYS_REFCURSOR
+) IS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT p.codigo,
+               p.nombre,
+               i.cantidad_actual,
+               i.stock_minimo
+        FROM inventario i
+        JOIN producto p ON p.id_producto = i.id_producto
+        WHERE i.cantidad_actual <= i.stock_minimo
+          AND p.activo = 'S'
+        ORDER BY i.cantidad_actual ASC;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20031, 'Error al generar reporte de stock minimo (cursor)');
+END sp_reporte_stock_minimo_cursor;
+
 END pkg_reportes_stock;
 /
 
@@ -949,6 +1118,10 @@ CREATE OR REPLACE PACKAGE pkg_usuarios AS
 
     PROCEDURE sp_desactivar_usuario (
         p_username IN VARCHAR2
+    );
+
+    PROCEDURE sp_listar_usuarios (
+        p_cursor OUT SYS_REFCURSOR
     );
 
 END pkg_usuarios;
@@ -1019,6 +1192,19 @@ BEGIN
     END IF;
 END sp_desactivar_usuario;
 
+PROCEDURE sp_listar_usuarios (
+    p_cursor OUT SYS_REFCURSOR
+) IS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT username, rol, activo, fecha_creacion
+        FROM usuario
+        ORDER BY fecha_creacion DESC;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20306, 'Error al listar usuarios');
+END sp_listar_usuarios;
+
 END pkg_usuarios;
 /
 
@@ -1068,6 +1254,104 @@ EXCEPTION
 END sp_login;
 
 END pkg_login;
+/
+
+
+-- Historial de stock
+CREATE OR REPLACE PACKAGE pkg_historial_stock AS
+
+    PROCEDURE sp_listar_historial_reciente (
+        p_cursor OUT SYS_REFCURSOR
+    );
+
+END pkg_historial_stock;
+/
+
+CREATE OR REPLACE PACKAGE BODY pkg_historial_stock AS
+
+PROCEDURE sp_listar_historial_reciente (
+    p_cursor OUT SYS_REFCURSOR
+) IS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT *
+        FROM (
+            SELECT p.codigo,
+                   h.cantidad_anterior,
+                   h.cantidad_nueva,
+                   h.stock_minimo_anterior,
+                   h.stock_minimo_nuevo,
+                   h.usuario_responsable,
+                   h.origen,
+                   h.fecha_cambio
+            FROM historial_stock h
+            JOIN inventario i ON i.id_inventario = h.id_inventario
+            JOIN producto p ON p.id_producto = i.id_producto
+            ORDER BY h.fecha_cambio DESC
+        )
+        WHERE ROWNUM <= 30;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20401, 'Error al listar historial de stock');
+END sp_listar_historial_reciente;
+
+END pkg_historial_stock;
+/
+
+
+-- Historial de productos
+CREATE OR REPLACE PACKAGE pkg_historial_producto AS
+
+    PROCEDURE sp_listar_historial_filtrado (
+        p_operacion             IN VARCHAR2 DEFAULT NULL,
+        p_usuario               IN VARCHAR2 DEFAULT NULL,
+        p_fecha_desde           IN DATE DEFAULT NULL,
+        p_fecha_hasta_exclusiva IN DATE DEFAULT NULL,
+        p_cursor                OUT SYS_REFCURSOR
+    );
+
+END pkg_historial_producto;
+/
+
+CREATE OR REPLACE PACKAGE BODY pkg_historial_producto AS
+
+PROCEDURE sp_listar_historial_filtrado (
+    p_operacion             IN VARCHAR2 DEFAULT NULL,
+    p_usuario               IN VARCHAR2 DEFAULT NULL,
+    p_fecha_desde           IN DATE DEFAULT NULL,
+    p_fecha_hasta_exclusiva IN DATE DEFAULT NULL,
+    p_cursor                OUT SYS_REFCURSOR
+) IS
+BEGIN
+    OPEN p_cursor FOR
+        SELECT *
+        FROM (
+            SELECT codigo,
+                   tipo_operacion,
+                   nombre_anterior,
+                   nombre_nuevo,
+                   categoria_anterior,
+                   categoria_nueva,
+                   precio_anterior,
+                   precio_nuevo,
+                   activo_anterior,
+                   activo_nuevo,
+                   usuario_responsable,
+                   fecha_operacion
+            FROM historial_producto
+            WHERE (p_operacion IS NULL OR tipo_operacion = p_operacion)
+              AND (p_usuario IS NULL OR UPPER(usuario_responsable) LIKE '%' || UPPER(p_usuario) || '%')
+              AND (p_fecha_desde IS NULL OR fecha_operacion >= p_fecha_desde)
+              AND (p_fecha_hasta_exclusiva IS NULL OR fecha_operacion < p_fecha_hasta_exclusiva)
+            ORDER BY fecha_operacion DESC
+        )
+        WHERE ROWNUM <= 40;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20402, 'Error al listar historial de productos');
+END sp_listar_historial_filtrado;
+
+END pkg_historial_producto;
 /
 
 
