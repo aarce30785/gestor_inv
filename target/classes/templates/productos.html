@@ -4,6 +4,31 @@
     <meta charset="UTF-8">
     <title>Productos | Inventario</title>
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <style>
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-card {
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+    </style>
 </head>
 
 <body>
@@ -21,7 +46,6 @@
         <a th:href="@{/historial-productos}">Historial productos</a>
         <a th:href="@{/usuarios}">Usuarios</a>
         <a th:href="@{/reportes/stock-minimo}">Reporte stock mínimo</a>
-        <a th:href="@{/reportes/categoria}">Reporte categoría</a>
         <a th:href="@{/logout}">Salir</a>
 
     </nav>
@@ -36,9 +60,9 @@
         <div class="page-header">
             <h2 class="page-title">Productos</h2>
 
-            <a th:href="@{/productos/nuevo}" class="btn-primary">
+            <button type="button" class="btn-primary" id="openNuevoProductoBtn">
                 + Añadir
-            </a>
+            </button>
         </div>
 
         <!-- Mensajes flash -->
@@ -55,6 +79,13 @@
                         th:value="${busqueda}"
                         class="search-input"
                 >
+                <select name="categoria" class="search-input">
+                    <option value="">Todas las categorías</option>
+                    <option th:each="c : ${categorias}"
+                            th:value="${c}"
+                            th:text="${c}"
+                            th:selected="${c == categoria}"></option>
+                </select>
                 <button type="submit" class="search-btn">🔍</button>
                 <a th:href="@{/productos}" class="clear-btn">✖</a>
             </form>
@@ -121,6 +152,93 @@
     </div>
 
 </main>
+
+<div id="nuevoProductoModal" class="modal-overlay" th:classappend="${openNuevoModal} ? ' open' : ''">
+    <div class="card modal-card">
+        <div class="modal-header">
+            <h3 style="margin:0;">Nuevo producto</h3>
+            <button type="button" id="closeNuevoProductoBtn" class="delete-btn">Cerrar</button>
+        </div>
+
+        <div th:if="${errorNuevo}" class="error-box">
+            <span th:text="${errorNuevo}"></span>
+        </div>
+
+        <form th:action="@{/productos/guardar}" method="post" class="form">
+            <div class="form-group">
+                <label>Código</label>
+                <input class="search"
+                       type="text"
+                       name="codigo"
+                       placeholder="PRD-001"
+                       pattern="PRD-[0-9]{3}"
+                       th:value="${nuevoCodigo}"
+                       required>
+                <small class="hint">Formato requerido: PRD-001</small>
+            </div>
+
+            <div class="form-group">
+                <label>Nombre</label>
+                <input class="search" type="text" name="nombre" th:value="${nuevoNombre}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea class="search" name="descripcion" rows="3" th:text="${nuevoDescripcion}"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Categoría</label>
+                <input class="search" type="text" name="categoria" th:value="${nuevoCategoria}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Precio</label>
+                <input class="search"
+                       type="number"
+                       step="0.01"
+                       min="0"
+                       name="precio"
+                       th:value="${nuevoPrecio}"
+                       required>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="search-btn">Guardar</button>
+                <button type="button" class="clear-btn" id="cancelNuevoProductoBtn">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    (function () {
+        const modal = document.getElementById('nuevoProductoModal');
+        const openBtn = document.getElementById('openNuevoProductoBtn');
+        const closeBtn = document.getElementById('closeNuevoProductoBtn');
+        const cancelBtn = document.getElementById('cancelNuevoProductoBtn');
+
+        if (!modal || !openBtn) return;
+
+        function abrirModal() {
+            modal.classList.add('open');
+        }
+
+        function cerrarModal() {
+            modal.classList.remove('open');
+        }
+
+        openBtn.addEventListener('click', abrirModal);
+        if (closeBtn) closeBtn.addEventListener('click', cerrarModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', cerrarModal);
+
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) {
+                cerrarModal();
+            }
+        });
+    })();
+</script>
 
 </body>
 </html>

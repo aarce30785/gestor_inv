@@ -18,7 +18,6 @@
         <a th:href="@{/historial-productos}">Historial productos</a>
         <a th:href="@{/usuarios}">Usuarios</a>
         <a th:href="@{/reportes/stock-minimo}">Reporte stock mínimo</a>
-        <a th:href="@{/reportes/categoria}">Reporte categoría</a>
         <a th:href="@{/logout}">Salir</a>
     </nav>
 </aside>
@@ -31,82 +30,84 @@
     <div th:if="${error}" class="error-box" th:text="${error}"></div>
     <div th:if="${success}" class="success-box" th:text="${success}"></div>
 
-    <div class="card" style="max-width:680px; margin-bottom:20px;">
-        <h3>Registrar compra</h3>
-        <form method="post" th:action="@{/compras/registrar}" class="form">
-            <div class="form-group">
-                <label>Producto</label>
-                <select class="search" name="codigoProducto" required>
-                    <option value="">Seleccionar</option>
-                    <option th:each="p : ${productos}"
-                            th:value="${p.codigo}"
-                            th:text="${p.codigo + ' - ' + p.nombre}"></option>
-                </select>
-            </div>
+    <div style="display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap;">
+        <div class="card" style="flex:1 1 320px; min-width:300px; max-width:460px; margin:0;">
+            <h3 style="margin:0 0 15px 0;">Registrar compra</h3>
+            <form method="post" th:action="@{/compras/registrar}" class="form">
+                <div class="form-group">
+                    <label>Producto</label>
+                    <select class="search" name="codigoProducto" required>
+                        <option value="">Seleccionar</option>
+                        <option th:each="p : ${productos}"
+                                th:value="${p.codigo}"
+                                th:text="${p.codigo + ' - ' + p.nombre}"></option>
+                    </select>
+                </div>
 
-            <div class="form-group">
-                <label>Proveedor</label>
-                <select class="search" name="idProveedor" required>
-                    <option value="">Seleccionar</option>
-                    <option th:each="pr : ${proveedores}"
-                            th:value="${pr.idProveedor}"
-                            th:text="${pr.nombre}"></option>
-                </select>
-            </div>
+                <div class="form-group">
+                    <label>Proveedor</label>
+                    <select class="search" name="idProveedor" required>
+                        <option value="">Seleccionar</option>
+                        <option th:each="pr : ${proveedores}"
+                                th:value="${pr.idProveedor}"
+                                th:text="${pr.nombre}"></option>
+                    </select>
+                </div>
 
-            <div class="form-group">
-                <label>Cantidad</label>
-                <input type="number" name="cantidad" min="1" required>
-            </div>
+                <div class="form-group">
+                    <label>Cantidad</label>
+                    <input type="number" name="cantidad" min="1" required>
+                </div>
 
-            <div class="form-group">
-                <label>Costo unitario</label>
-                <input type="number" name="costoUnitario" min="0" step="0.01" required>
-            </div>
+                <div class="form-group">
+                    <label>Costo unitario</label>
+                    <input type="number" name="costoUnitario" min="0" step="0.01" required>
+                </div>
 
-            <div class="form-group">
-                <label>Stock minimo (opcional)</label>
-                <input type="number" name="stockMinimo" min="0">
-            </div>
+                <div class="form-group">
+                    <label>Stock minimo (opcional)</label>
+                    <input type="number" name="stockMinimo" min="0">
+                </div>
 
-            <div class="form-group">
-                <label>Observacion</label>
-                <input type="text" name="observacion" maxlength="200">
-            </div>
+                <div class="form-group">
+                    <label>Observacion</label>
+                    <input type="text" name="observacion" maxlength="200">
+                </div>
 
-            <div class="form-actions">
-                <button type="submit" class="btn-primary">Registrar compra</button>
-            </div>
-        </form>
-    </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Registrar compra</button>
+                </div>
+            </form>
+        </div>
 
-    <div class="card">
-        <h3>Compras recientes</h3>
-        <table>
-            <thead>
-            <tr>
-                <th>Fecha</th>
-                <th>Producto</th>
-                <th>Proveedor</th>
-                <th>Cantidad</th>
-                <th>Costo unitario</th>
-                <th>Usuario</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="c : ${compras}">
-                <td th:text="${#dates.format(c.fechaCompra, 'dd/MM/yyyy HH:mm')}"></td>
-                <td th:text="${c.codigoProducto}"></td>
-                <td th:text="${c.nombreProveedor}"></td>
-                <td th:text="${c.cantidad}"></td>
-                <td th:text="${c.costoUnitario}"></td>
-                <td th:text="${c.usuario}"></td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(compras)}">
-                <td colspan="6" style="text-align:center; opacity:.6;">Sin compras registradas</td>
-            </tr>
-            </tbody>
-        </table>
+        <div class="card" style="flex:2 1 620px; min-width:320px; margin:0;">
+            <h3 style="margin:0 0 15px 0;">Compras recientes</h3>
+            <table>
+                <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Producto</th>
+                    <th>Proveedor</th>
+                    <th>Cantidad</th>
+                    <th>Costo unitario</th>
+                    <th>Usuario</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${compras}">
+                    <td th:text="${#dates.format(c.fechaCompra, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${c.codigoProducto}"></td>
+                    <td th:text="${c.nombreProveedor}"></td>
+                    <td th:text="${c.cantidad}"></td>
+                    <td th:text="${c.costoUnitario}"></td>
+                    <td th:text="${c.usuario}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(compras)}">
+                    <td colspan="6" style="text-align:center; opacity:.6;">Sin compras registradas</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </main>
 

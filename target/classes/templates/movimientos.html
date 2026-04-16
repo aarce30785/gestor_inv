@@ -21,7 +21,6 @@
         <a th:href="@{/historial-productos}">Historial productos</a>
         <a th:href="@{/usuarios}">Usuarios</a>
         <a th:href="@{/reportes/stock-minimo}">Reporte stock mínimo</a>
-        <a th:href="@{/reportes/categoria}">Reporte categoría</a>
         <a th:href="@{/logout}">Salir</a>
 
     </nav>
@@ -35,11 +34,13 @@
     </div>
 
 
+    <div style="display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap;">
+
     <!-- FORM CARD -->
     <form method="post"
           th:action="@{/movimientos/registrar}"
           class="card"
-          style="max-width:520px; margin-bottom:30px;">
+          style="flex:1 1 320px; min-width:300px; max-width:420px; margin:0;">
 
         <h3 style="margin-bottom:15px;">Registrar movimiento</h3>
 
@@ -56,10 +57,19 @@
         <div class="form-group">
             <label>Código del producto</label>
             <input class="search"
-                   name="codigoProducto"
-                   placeholder="PRD-001"
-                   pattern="PRD-[0-9]{3}"
-                   required>
+                   id="buscadorProducto"
+                   type="text"
+                   placeholder="Buscar por código o nombre"
+                   autocomplete="off"
+                   style="margin-bottom:8px;">
+            <select class="search" name="codigoProducto" required>
+                <option value="">Seleccionar producto</option>
+                <option th:each="p : ${productos}"
+                        th:value="${p.codigo}"
+                        th:text="${p.codigo + ' - ' + p.nombre}"
+                        th:attr="data-search=${#strings.toLowerCase(p.codigo + ' ' + p.nombre)}">
+                </option>
+            </select>
         </div>
 
         <div class="form-group">
@@ -104,9 +114,9 @@
     </form>
 
     <!-- TABLE CARD -->
-    <div class="card">
+    <div class="card" style="flex:2 1 620px; min-width:320px; margin:0;">
 
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
             <h3 style="margin:0;">Historial reciente</h3>
             <form method="get" th:action="@{/movimientos}" style="display:flex; gap:8px; align-items:center;">
                 <label for="limite" style="font-size:.85rem; color:#9ca3af;">Mostrar</label>
@@ -156,7 +166,49 @@
 
     </div>
 
+    </div>
+
 </main>
+
+<script>
+    (function () {
+        const buscador = document.getElementById('buscadorProducto');
+        const select = document.querySelector('select[name="codigoProducto"]');
+
+        if (!buscador || !select) return;
+
+        const opcionesOriginales = Array.from(select.options).map(function (opt) {
+            return {
+                value: opt.value,
+                text: opt.text,
+                search: (opt.getAttribute('data-search') || '').toLowerCase()
+            };
+        });
+
+        buscador.addEventListener('input', function () {
+            const termino = buscador.value.trim().toLowerCase();
+            const valorSeleccionado = select.value;
+            select.innerHTML = '';
+
+            opcionesOriginales.forEach(function (opcion) {
+                const esPlaceholder = opcion.value === '';
+                const coincide = esPlaceholder || opcion.search.indexOf(termino) !== -1;
+
+                if (coincide) {
+                    const opt = document.createElement('option');
+                    opt.value = opcion.value;
+                    opt.text = opcion.text;
+                    if (esPlaceholder) {
+                        opt.selected = !valorSeleccionado;
+                    } else if (opcion.value === valorSeleccionado) {
+                        opt.selected = true;
+                    }
+                    select.appendChild(opt);
+                }
+            });
+        });
+    })();
+</script>
 
 </body>
 </html>

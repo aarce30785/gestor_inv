@@ -1,6 +1,7 @@
 package org.example.controller;
 
 import org.example.dao.HistorialProductoDAO;
+import org.example.dao.UsuarioDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.Comparator;
 
 @Controller
 @RequestMapping("/historial-productos")
@@ -17,6 +19,9 @@ public class HistorialProductoController {
 
     @Autowired
     private HistorialProductoDAO historialProductoDAO;
+
+    @Autowired
+    private UsuarioDAO usuarioDAO;
 
     @GetMapping
     public String verHistorial(
@@ -52,6 +57,12 @@ public class HistorialProductoController {
         model.addAttribute("usuario", usuario != null ? usuario : "");
         model.addAttribute("fechaDesde", fechaDesde != null ? fechaDesde : "");
         model.addAttribute("fechaHasta", fechaHasta != null ? fechaHasta : "");
+        model.addAttribute("usuariosFiltro", usuarioDAO.listarUsuarios().stream()
+                .map(u -> u.getUsername())
+                .filter(u -> u != null && !u.trim().isEmpty())
+                .distinct()
+                .sorted(Comparator.naturalOrder())
+                .toList());
 
         return "historial-productos";
     }

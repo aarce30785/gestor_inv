@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
+import java.util.List;
 
 @Controller
 @RequestMapping("/productos")
@@ -22,14 +24,37 @@ public class ProductoController {
     @GetMapping
     public String verProductos(
             @RequestParam(required = false) String busqueda,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false, defaultValue = "false") boolean nuevo,
             Model model) {
 
-        model.addAttribute("productos",
-                productoDAO.listarProductos(busqueda));
-        model.addAttribute("busqueda",
-                busqueda != null ? busqueda : "");
+        cargarDatosListado(model, busqueda, categoria);
+        model.addAttribute("openNuevoModal", nuevo);
 
         return "productos";
+    }
+
+    private void cargarDatosListado(Model model, String busqueda, String categoria) {
+        List<ProductoDTO> productos = productoDAO.listarProductos(busqueda);
+        String categoriaFiltro = categoria != null ? categoria.trim() : "";
+        if (!categoriaFiltro.isEmpty()) {
+            productos = productos.stream()
+                    .filter(p -> p.getCategoria() != null && p.getCategoria().equalsIgnoreCase(categoriaFiltro))
+                    .toList();
+        }
+
+        List<String> categorias = productoDAO.listarProductos(null).stream()
+                .map(ProductoDTO::getCategoria)
+                .filter(c -> c != null && !c.trim().isEmpty())
+                .distinct()
+                .sorted(Comparator.naturalOrder())
+                .toList();
+
+        model.addAttribute("productos", productos);
+        model.addAttribute("categorias", categorias);
+        model.addAttribute("busqueda",
+                busqueda != null ? busqueda : "");
+        model.addAttribute("categoria", categoriaFiltro);
     }
 
     // FORM EDITAR
@@ -60,7 +85,7 @@ public class ProductoController {
 
     @GetMapping("/nuevo")
     public String nuevoProducto() {
-        return "producto-nuevo";
+        return "redirect:/productos?nuevo=true";
     }
 
     @PostMapping("/guardar")
@@ -80,8 +105,15 @@ public class ProductoController {
             ra.addFlashAttribute("success", "Producto registrado correctamente.");
             return "redirect:/productos";
         } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-            return "producto-nuevo";
+            cargarDatosListado(model, null, null);
+            model.addAttribute("errorNuevo", e.getMessage());
+            model.addAttribute("openNuevoModal", true);
+            model.addAttribute("nuevoCodigo", codigo);
+            model.addAttribute("nuevoNombre", nombre);
+            model.addAttribute("nuevoDescripcion", descripcion);
+            model.addAttribute("nuevoCategoria", categoria);
+            model.addAttribute("nuevoPrecio", precio);
+            return "productos";
         }
     }
 

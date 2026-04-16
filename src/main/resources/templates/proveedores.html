@@ -18,7 +18,6 @@
         <a th:href="@{/historial-productos}">Historial productos</a>
         <a th:href="@{/usuarios}">Usuarios</a>
         <a th:href="@{/reportes/stock-minimo}">Reporte stock mínimo</a>
-        <a th:href="@{/reportes/categoria}">Reporte categoría</a>
         <a th:href="@{/logout}">Salir</a>
     </nav>
 </aside>
@@ -31,102 +30,104 @@
     <div th:if="${error}" class="error-box" th:text="${error}"></div>
     <div th:if="${success}" class="success-box" th:text="${success}"></div>
 
-    <div class="card" style="max-width:650px; margin-bottom:20px;">
-        <h3>Registrar proveedor</h3>
-        <form method="post" th:action="@{/proveedores/guardar}" class="form">
-            <div class="form-group">
-                <label>Nombre</label>
-                <input type="text" name="nombre" required>
+    <div style="display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap;">
+        <div style="flex:1 1 320px; min-width:300px; max-width:460px; display:flex; flex-direction:column; gap:20px;">
+            <div class="card" style="margin:0;">
+                <h3 style="margin:0 0 15px 0;">Registrar proveedor</h3>
+                <form method="post" th:action="@{/proveedores/guardar}" class="form">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" name="nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Telefono</label>
+                        <input type="text" name="telefono" maxlength="30">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" maxlength="120">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Guardar proveedor</button>
+                    </div>
+                </form>
             </div>
-            <div class="form-group">
-                <label>Telefono</label>
-                <input type="text" name="telefono" maxlength="30">
-            </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" name="email" maxlength="120">
-            </div>
-            <div class="form-actions">
-                <button type="submit" class="btn-primary">Guardar proveedor</button>
-            </div>
-        </form>
-    </div>
 
-    <div class="card" style="max-width:650px; margin-bottom:20px;">
-        <h3>Asociar producto a proveedor</h3>
-        <form method="post" th:action="@{/proveedores/asociar}" class="form">
-            <div class="form-group">
-                <label>Producto</label>
-                <select class="search" name="codigoProducto" required>
-                    <option value="">Seleccionar</option>
-                    <option th:each="p : ${productos}"
-                            th:value="${p.codigo}"
-                            th:text="${p.codigo + ' - ' + p.nombre}"></option>
-                </select>
+            <div class="card" style="margin:0;">
+                <h3 style="margin:0 0 15px 0;">Asociar producto a proveedor</h3>
+                <form method="post" th:action="@{/proveedores/asociar}" class="form">
+                    <div class="form-group">
+                        <label>Producto</label>
+                        <select class="search" name="codigoProducto" required>
+                            <option value="">Seleccionar</option>
+                            <option th:each="p : ${productos}"
+                                    th:value="${p.codigo}"
+                                    th:text="${p.codigo + ' - ' + p.nombre}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Proveedor</label>
+                        <select class="search" name="idProveedor" required>
+                            <option value="">Seleccionar</option>
+                            <option th:each="pr : ${proveedores}"
+                                    th:value="${pr.idProveedor}"
+                                    th:text="${pr.nombre}"></option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Asociar</button>
+                    </div>
+                </form>
             </div>
-            <div class="form-group">
-                <label>Proveedor</label>
-                <select class="search" name="idProveedor" required>
-                    <option value="">Seleccionar</option>
-                    <option th:each="pr : ${proveedores}"
-                            th:value="${pr.idProveedor}"
-                            th:text="${pr.nombre}"></option>
-                </select>
-            </div>
-            <div class="form-actions">
-                <button type="submit" class="btn-primary">Asociar</button>
-            </div>
-        </form>
-    </div>
+        </div>
 
-    <div class="card" style="margin-bottom:20px;">
-        <h3>Proveedores activos</h3>
-        <table>
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Telefono</th>
-                <th>Email</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="pr : ${proveedores}">
-                <td th:text="${pr.idProveedor}"></td>
-                <td th:text="${pr.nombre}"></td>
-                <td th:text="${pr.telefono}"></td>
-                <td th:text="${pr.email}"></td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(proveedores)}">
-                <td colspan="4" style="text-align:center; opacity:.6;">Sin proveedores registrados</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+        <div style="flex:2 1 620px; min-width:320px; display:flex; flex-direction:column; gap:20px;">
+            <div class="card" style="margin:0;">
+                <h3 style="margin:0 0 15px 0;">Proveedores activos</h3>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Telefono</th>
+                        <th>Email</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="pr : ${proveedores}">
+                        <td th:text="${pr.nombre}"></td>
+                        <td th:text="${pr.telefono}"></td>
+                        <td th:text="${pr.email}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(proveedores)}">
+                        <td colspan="3" style="text-align:center; opacity:.6;">Sin proveedores registrados</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
 
-    <div class="card">
-        <h3>Asociaciones producto-proveedor</h3>
-        <table>
-            <thead>
-            <tr>
-                <th>Codigo</th>
-                <th>Producto</th>
-                <th>ID proveedor</th>
-                <th>Proveedor</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="a : ${asociaciones}">
-                <td th:text="${a.codigoProducto}"></td>
-                <td th:text="${a.nombreProducto}"></td>
-                <td th:text="${a.idProveedor}"></td>
-                <td th:text="${a.nombreProveedor}"></td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(asociaciones)}">
-                <td colspan="4" style="text-align:center; opacity:.6;">Sin asociaciones registradas</td>
-            </tr>
-            </tbody>
-        </table>
+            <div class="card" style="margin:0;">
+                <h3 style="margin:0 0 15px 0;">Asociaciones producto-proveedor</h3>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Producto</th>
+                        <th>Proveedor</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="a : ${asociaciones}">
+                        <td th:text="${a.codigoProducto}"></td>
+                        <td th:text="${a.nombreProducto}"></td>
+                        <td th:text="${a.nombreProveedor}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(asociaciones)}">
+                        <td colspan="3" style="text-align:center; opacity:.6;">Sin asociaciones registradas</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </main>
 

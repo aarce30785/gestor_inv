@@ -2,6 +2,7 @@ package org.example.controller;
 
 import jakarta.servlet.http.HttpSession;
 import org.example.dao.MovimientoDAO;
+import org.example.dao.ProductoDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,12 +19,16 @@ public class MovimientoController {
     @Autowired
     private MovimientoDAO movimientoDAO;
 
+    @Autowired
+    private ProductoDAO productoDAO;
+
     @GetMapping
     public String verMovimientos(
             @RequestParam(required = false, defaultValue = "5") int limite,
             Model model
     ) {
         model.addAttribute("movimientos", movimientoDAO.listarMovimientosRecientes(limite));
+        model.addAttribute("productos", productoDAO.listarProductos(null));
         model.addAttribute("limite", limite);
         return "movimientos";
     }
@@ -52,6 +57,7 @@ public class MovimientoController {
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("movimientos", movimientoDAO.listarMovimientosRecientes(5));
+            model.addAttribute("productos", productoDAO.listarProductos(null));
             model.addAttribute("limite", 5);
             return "movimientos";
         }
