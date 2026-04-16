@@ -23,7 +23,12 @@ public class LoginDAO {
 
             cs.execute();
 
-            return cs.getString(3); // ROL
+            String rol = cs.getString(3);
+            if (rol == null || rol.trim().isEmpty()) {
+                throw new RuntimeException("Credenciales invalidas.");
+            }
+
+            return rol; // ROL
 
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());

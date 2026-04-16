@@ -8,23 +8,54 @@
 
 <body>
 
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="logo">📦 Inventario</div>
+    <nav class="menu">
+        <a th:href="@{/productos}" class="active">Productos</a>
+        <a th:href="@{/movimientos}">Movimientos</a>
+        <a th:href="@{/proveedores}">Proveedores</a>
+        <a th:href="@{/compras}">Compras</a>
+        <a th:href="@{/historial-stock}">Historial stock</a>
+        <a th:href="@{/usuarios}">Usuarios</a>
+        <a th:href="@{/reportes/stock-minimo}">Reporte stock minimo</a>
+        <a th:href="@{/logout}">Salir</a>
+    </nav>
+</aside>
+
 <main class="main">
 
     <div class="form-wrapper">
-
         <div class="card form-card">
 
             <h2 class="form-title">Editar producto</h2>
             <p class="form-subtitle">Actualiza la información del producto</p>
+
+            <!-- ERROR -->
+            <div th:if="${error}" class="error-box">
+                ⚠️ <span th:text="${error}"></span>
+            </div>
 
             <form th:action="@{/productos/editar}" method="post" class="form">
 
                 <input type="hidden" name="codigo" th:value="${producto.codigo}">
 
                 <div class="form-group">
+                    <label>Código</label>
+                    <input type="text" th:value="${producto.codigo}" disabled
+                           style="opacity:.5; cursor:not-allowed;">
+                </div>
+
+                <div class="form-group">
                     <label>Nombre</label>
                     <input type="text" name="nombre"
                            th:value="${producto.nombre}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea name="descripcion" rows="3"
+                              th:text="${producto.descripcion}"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -35,7 +66,7 @@
 
                 <div class="form-group">
                     <label>Precio</label>
-                    <input type="number" step="0.01" name="precio"
+                    <input type="number" step="0.01" min="0" name="precio"
                            th:value="${producto.precio}" required>
                 </div>
 
@@ -47,7 +78,6 @@
             </form>
 
         </div>
-
     </div>
 
 </main>

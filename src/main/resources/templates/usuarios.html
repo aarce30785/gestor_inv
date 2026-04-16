@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Usuarios</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo">Inventario</div>
+    <nav class="menu">
+        <a th:href="@{/productos}">Productos</a>
+        <a th:href="@{/movimientos}">Movimientos</a>
+        <a th:href="@{/proveedores}">Proveedores</a>
+        <a th:href="@{/compras}">Compras</a>
+        <a th:href="@{/historial-stock}">Historial stock</a>
+        <a th:href="@{/historial-productos}">Historial productos</a>
+        <a href="#" class="active">Usuarios</a>
+        <a th:href="@{/logout}">Salir</a>
+    </nav>
+</aside>
+
+<main class="main">
+    <div class="header">
+        <h2>Gestion de usuarios y roles</h2>
+    </div>
+
+    <div th:if="${error}" class="error-box" th:text="${error}"></div>
+    <div th:if="${success}" class="success-box" th:text="${success}"></div>
+
+    <div class="card" style="max-width: 700px; margin-bottom: 20px;">
+        <h3>Registrar usuario</h3>
+        <form method="post" th:action="@{/usuarios/guardar}" class="form">
+            <div class="form-group">
+                <label>Usuario</label>
+                <input type="text" name="username" maxlength="30" required>
+            </div>
+            <div class="form-group">
+                <label>Contrasena</label>
+                <input type="password" name="password" maxlength="100" required>
+            </div>
+            <div class="form-group">
+                <label>Rol</label>
+                <select name="rol" class="search" required>
+                    <option value="">Seleccionar</option>
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="OPERADOR">OPERADOR</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button class="btn-primary" type="submit">Crear usuario</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>Usuarios registrados</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Activo</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="u : ${usuarios}">
+                <td th:text="${u.username}"></td>
+                <td>
+                    <form th:action="@{/usuarios/rol}" method="post" style="display:flex; gap:8px; align-items:center;">
+                        <input type="hidden" name="username" th:value="${u.username}">
+                        <select name="rol" class="search" style="min-width:130px;">
+                            <option value="ADMIN" th:selected="${u.rol == 'ADMIN'}">ADMIN</option>
+                            <option value="OPERADOR" th:selected="${u.rol == 'OPERADOR'}">OPERADOR</option>
+                        </select>
+                        <button type="submit" class="edit-btn">Guardar</button>
+                    </form>
+                </td>
+                <td th:text="${u.activo}"></td>
+                <td th:text="${#dates.format(u.fechaCreacion, 'dd/MM/yyyy')}"></td>
+                <td>
+                    <form th:if="${u.activo == 'S'}" th:action="@{/usuarios/desactivar}" method="post" style="display:inline;">
+                        <input type="hidden" name="username" th:value="${u.username}">
+                        <button type="submit" class="delete-btn" onclick="return confirm('¿Desactivar usuario?')">Desactivar</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(usuarios)}">
+                <td colspan="5" style="text-align:center; opacity:.6;">Sin usuarios</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+</body>
+</html>
+

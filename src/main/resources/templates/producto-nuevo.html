@@ -8,6 +8,21 @@
 
 <body>
 
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="logo">📦 Inventario</div>
+    <nav class="menu">
+        <a th:href="@{/productos}" class="active">Productos</a>
+        <a th:href="@{/movimientos}">Movimientos</a>
+        <a th:href="@{/proveedores}">Proveedores</a>
+        <a th:href="@{/compras}">Compras</a>
+        <a th:href="@{/historial-stock}">Historial stock</a>
+        <a th:href="@{/usuarios}">Usuarios</a>
+        <a th:href="@{/reportes/stock-minimo}">Reporte stock minimo</a>
+        <a th:href="@{/logout}">Salir</a>
+    </nav>
+</aside>
+
 <main class="main">
 
     <!-- HEADER -->
@@ -45,7 +60,7 @@
 
         <div class="form-group">
             <label>Descripción</label>
-            <textarea class="search" name="descripcion" rows="3" required></textarea>
+            <textarea class="search" name="descripcion" rows="3"></textarea>
         </div>
 
         <div class="form-group">

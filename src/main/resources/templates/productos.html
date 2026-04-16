@@ -15,7 +15,13 @@
     <nav class="menu">
         <a href="#" class="active">Productos</a>
         <a th:href="@{/movimientos}">Movimientos</a>
+        <a th:href="@{/proveedores}">Proveedores</a>
+        <a th:href="@{/compras}">Compras</a>
+        <a th:href="@{/historial-stock}">Historial stock</a>
+        <a th:href="@{/historial-productos}">Historial productos</a>
+        <a th:href="@{/usuarios}">Usuarios</a>
         <a th:href="@{/reportes/stock-minimo}">Reporte stock minimo</a>
+        <a th:href="@{/reportes/categoria}">Reporte categoria</a>
         <a th:href="@{/logout}">Salir</a>
 
     </nav>
@@ -31,10 +37,13 @@
             <h2 class="page-title">Productos</h2>
 
             <a th:href="@{/productos/nuevo}" class="btn-primary">
-                Añadir
+                + Añadir
             </a>
         </div>
 
+        <!-- Mensajes flash -->
+        <div th:if="${success}" class="success-box" th:text="${success}"></div>
+        <div th:if="${error}"   class="error-box"   th:text="${error}"></div>
 
         <!-- Buscador -->
         <div class="search-container">
@@ -83,8 +92,8 @@
                         <input type="hidden" name="codigo" th:value="${p.codigo}">
                         <button type="submit"
                                 class="delete-btn"
-                                onclick="return confirm('¿Eliminar producto?')">
-                            Eliminar
+                                onclick="return confirm('¿Desactivar producto? No será eliminado del sistema.')">
+                            Desactivar
                         </button>
                     </form>
                 </td>

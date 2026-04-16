@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de stock</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo">Inventario</div>
+    <nav class="menu">
+        <a th:href="@{/productos}">Productos</a>
+        <a th:href="@{/movimientos}">Movimientos</a>
+        <a th:href="@{/proveedores}">Proveedores</a>
+        <a th:href="@{/compras}">Compras</a>
+        <a href="#" class="active">Historial stock</a>
+        <a th:href="@{/historial-productos}">Historial productos</a>
+        <a th:href="@{/usuarios}">Usuarios</a>
+        <a th:href="@{/logout}">Salir</a>
+    </nav>
+</aside>
+
+<main class="main">
+    <div class="header">
+        <h2>Historial de cambios de stock</h2>
+    </div>
+
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Producto</th>
+                <th>Cant. anterior</th>
+                <th>Cant. nueva</th>
+                <th>Min. anterior</th>
+                <th>Min. nuevo</th>
+                <th>Usuario</th>
+                <th>Origen</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="h : ${historial}">
+                <td th:text="${#dates.format(h.fechaCambio, 'dd/MM/yyyy HH:mm')}"></td>
+                <td th:text="${h.codigoProducto}"></td>
+                <td th:text="${h.cantidadAnterior}"></td>
+                <td th:text="${h.cantidadNueva}"></td>
+                <td th:text="${h.stockMinimoAnterior}"></td>
+                <td th:text="${h.stockMinimoNuevo}"></td>
+                <td th:text="${h.usuarioResponsable}"></td>
+                <td th:text="${h.origen}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(historial)}">
+                <td colspan="8" style="text-align:center; opacity:.6;">Sin cambios registrados</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+</body>
+</html>
+

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/movimientos")
@@ -18,8 +19,12 @@ public class MovimientoController {
     private MovimientoDAO movimientoDAO;
 
     @GetMapping
-    public String verMovimientos(Model model) {
-        model.addAttribute("movimientos", movimientoDAO.listarMovimientos());
+    public String verMovimientos(
+            @RequestParam(required = false, defaultValue = "5") int limite,
+            Model model
+    ) {
+        model.addAttribute("movimientos", movimientoDAO.listarMovimientosRecientes(limite));
+        model.addAttribute("limite", limite);
         return "movimientos";
     }
 
@@ -29,9 +34,10 @@ public class MovimientoController {
             @RequestParam String tipo,
             @RequestParam int cantidad,
             @RequestParam(required = false) String observacion,
-            @RequestParam(required = false) int stockMinimo,
+            @RequestParam(required = false) Integer stockMinimo,
             HttpSession session,
-            Model model
+            Model model,
+            RedirectAttributes ra
     ) {
         try {
             String usuario = (String) session.getAttribute("usuario");
@@ -40,11 +46,13 @@ public class MovimientoController {
                     codigoProducto, usuario, tipo, cantidad, observacion, stockMinimo
             );
 
+            ra.addFlashAttribute("success", "Movimiento registrado correctamente.");
             return "redirect:/movimientos";
 
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
-            model.addAttribute("movimientos", movimientoDAO.listarMovimientos());
+            model.addAttribute("movimientos", movimientoDAO.listarMovimientosRecientes(5));
+            model.addAttribute("limite", 5);
             return "movimientos";
         }
     }

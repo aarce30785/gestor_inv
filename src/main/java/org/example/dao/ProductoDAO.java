@@ -88,34 +88,37 @@ public class ProductoDAO {
 
     public ProductoDTO obtenerProductoPorCodigo(String codigo) {
         try (Connection conn = DatabaseConnection.getConnection();
-             CallableStatement cs = conn.prepareCall("{ call pkg_productos.sp_obtener_producto(?, ?, ?, ?) }")) {
+             CallableStatement cs = conn.prepareCall("{ call pkg_productos.sp_obtener_producto(?, ?, ?, ?, ?) }")) {
 
-            cs.setString(1, codigo);           // IN
+            cs.setString(1, codigo);                   // IN
             cs.registerOutParameter(2, Types.VARCHAR); // nombre
-            cs.registerOutParameter(3, Types.VARCHAR); // categoría
-            cs.registerOutParameter(4, Types.NUMERIC); // precio
+            cs.registerOutParameter(3, Types.VARCHAR); // descripcion
+            cs.registerOutParameter(4, Types.VARCHAR); // categoría
+            cs.registerOutParameter(5, Types.NUMERIC); // precio
 
             cs.execute();
 
             String nombre = cs.getString(2);
-            String categoria = cs.getString(3);
-            BigDecimal precio = cs.getBigDecimal(4);
-            Integer stock = null;
-
             if (nombre == null) return null;
 
-            return new ProductoDTO(codigo, nombre, categoria, precio, stock);
+            String descripcion = cs.getString(3);
+            String categoria   = cs.getString(4);
+            BigDecimal precio  = cs.getBigDecimal(5);
+
+            return new ProductoDTO(codigo, nombre, descripcion, categoria, precio, null);
         } catch (SQLException e) {
             throw new RuntimeException("Error obteniendo producto", e);
         }
     }
 
 
-    public void eliminarProducto(String codigo) {
+    public void eliminarProducto(String codigo, String usuario) {
         String sql = "{ call pkg_productos.sp_eliminar_producto(?) }";
 
         try (Connection conn = DatabaseConnection.getConnection();
              CallableStatement cs = conn.prepareCall(sql)) {
+
+            setClientIdentifier(conn, usuario);
 
             cs.setString(1, codigo);
             cs.execute();
@@ -124,16 +127,19 @@ public class ProductoDAO {
         }
     }
 
-    public void editarProducto(ProductoDTO p) {
-        String sql = "{ call pkg_productos.sp_editar_producto(?, ?, ?, ?) }";
+    public void editarProducto(ProductoDTO p, String usuario) {
+        String sql = "{ call pkg_productos.sp_editar_producto(?, ?, ?, ?, ?) }";
 
         try (Connection conn = DatabaseConnection.getConnection();
              CallableStatement cs = conn.prepareCall(sql)) {
 
+            setClientIdentifier(conn, usuario);
+
             cs.setString(1, p.getCodigo());
             cs.setString(2, p.getNombre());
-            cs.setString(3, p.getCategoria());
-            cs.setBigDecimal(4, p.getPrecio());
+            cs.setString(3, p.getDescripcion());
+            cs.setString(4, p.getCategoria());
+            cs.setBigDecimal(5, p.getPrecio());
 
             cs.execute();
         } catch (SQLException e) {
@@ -146,13 +152,16 @@ public class ProductoDAO {
             String nombre,
             String descripcion,
             String categoria,
-            BigDecimal precio
+            BigDecimal precio,
+            String usuario
     ) {
 
         String sql = "{ call pkg_productos.sp_insertar_producto(?, ?, ?, ?, ?) }";
 
         try (Connection conn = DatabaseConnection.getConnection();
              CallableStatement cs = conn.prepareCall(sql)) {
+
+            setClientIdentifier(conn, usuario);
 
             cs.setString(1, codigo);
             cs.setString(2, nombre);
@@ -164,6 +173,14 @@ public class ProductoDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    private void setClientIdentifier(Connection conn, String usuario) throws SQLException {
+        String actor = (usuario == null || usuario.trim().isEmpty()) ? "SISTEMA" : usuario.trim();
+        try (CallableStatement cs = conn.prepareCall("BEGIN DBMS_SESSION.SET_IDENTIFIER(?); END;")) {
+            cs.setString(1, actor);
+            cs.execute();
         }
     }
 

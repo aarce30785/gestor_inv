@@ -28,6 +28,14 @@ public class AuthInterceptor implements HandlerInterceptor {
             return false;
         }
 
+        if (uri.startsWith("/usuarios")) {
+            String rol = (String) session.getAttribute("rol");
+            if (!"ADMIN".equals(rol)) {
+                response.sendRedirect("/productos");
+                return false;
+            }
+        }
+
         return true;
     }
 }

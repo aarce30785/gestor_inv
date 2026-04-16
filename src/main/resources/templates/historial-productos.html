@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de productos</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo">Inventario</div>
+    <nav class="menu">
+        <a th:href="@{/productos}">Productos</a>
+        <a th:href="@{/movimientos}">Movimientos</a>
+        <a th:href="@{/proveedores}">Proveedores</a>
+        <a th:href="@{/compras}">Compras</a>
+        <a th:href="@{/historial-stock}">Historial stock</a>
+        <a href="#" class="active">Historial productos</a>
+        <a th:href="@{/usuarios}">Usuarios</a>
+        <a th:href="@{/logout}">Salir</a>
+    </nav>
+</aside>
+
+<main class="main">
+    <div class="header">
+        <h2>Historial de cambios en productos</h2>
+    </div>
+
+    <div th:if="${error}" class="error-box" th:text="${error}"></div>
+
+    <div class="card" style="max-width: 900px; margin-bottom: 20px;">
+        <form method="get" th:action="@{/historial-productos}" class="form">
+            <div class="form-group">
+                <label>Operacion</label>
+                <select name="operacion" class="search">
+                    <option value="">Todas</option>
+                    <option value="ALTA" th:selected="${operacion == 'ALTA'}">ALTA</option>
+                    <option value="EDICION" th:selected="${operacion == 'EDICION'}">EDICION</option>
+                    <option value="DESACTIVAR" th:selected="${operacion == 'DESACTIVAR'}">DESACTIVAR</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Usuario</label>
+                <input type="text" name="usuario" th:value="${usuario}" placeholder="admin">
+            </div>
+
+            <div class="form-group">
+                <label>Fecha desde</label>
+                <input type="date" name="fechaDesde" th:value="${fechaDesde}">
+            </div>
+
+            <div class="form-group">
+                <label>Fecha hasta</label>
+                <input type="date" name="fechaHasta" th:value="${fechaHasta}">
+            </div>
+
+            <div class="form-actions">
+                <button class="btn-primary" type="submit">Filtrar</button>
+                <a class="btn-secondary" th:href="@{/historial-productos}">Limpiar</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Usuario</th>
+                <th>Operacion</th>
+                <th>Codigo</th>
+                <th>Nombre (antes/nuevo)</th>
+                <th>Categoria (antes/nueva)</th>
+                <th>Precio (antes/nuevo)</th>
+                <th>Activo (antes/nuevo)</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="h : ${historial}">
+                <td th:text="${#dates.format(h.fechaOperacion, 'dd/MM/yyyy HH:mm')}"></td>
+                <td th:text="${h.usuarioResponsable}"></td>
+                <td th:text="${h.tipoOperacion}"></td>
+                <td th:text="${h.codigo}"></td>
+                <td>
+                    <span th:text="${h.nombreAnterior != null ? h.nombreAnterior : '-'}"></span>
+                    /
+                    <span th:text="${h.nombreNuevo != null ? h.nombreNuevo : '-'}"></span>
+                </td>
+                <td>
+                    <span th:text="${h.categoriaAnterior != null ? h.categoriaAnterior : '-'}"></span>
+                    /
+                    <span th:text="${h.categoriaNuevo != null ? h.categoriaNuevo : '-'}"></span>
+                </td>
+                <td>
+                    <span th:text="${h.precioAnterior != null ? h.precioAnterior : '-'}"></span>
+                    /
+                    <span th:text="${h.precioNuevo != null ? h.precioNuevo : '-'}"></span>
+                </td>
+                <td>
+                    <span th:text="${h.activoAnterior != null ? h.activoAnterior : '-'}"></span>
+                    /
+                    <span th:text="${h.activoNuevo != null ? h.activoNuevo : '-'}"></span>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(historial)}">
+                <td colspan="8" style="text-align:center; opacity:.6;">Sin cambios registrados en productos</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+</body>
+</html>
+

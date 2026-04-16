@@ -1,14 +1,15 @@
 package org.example.controller;
 
+import jakarta.servlet.http.HttpSession;
 import org.example.dao.ProductoDAO;
 import org.example.dto.ProductoDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Controller
 @RequestMapping("/productos")
@@ -41,15 +42,19 @@ public class ProductoController {
     }
 
     @PostMapping("/editar")
-    public String editarProducto(ProductoDTO producto) {
-        productoDAO.editarProducto(producto);
+    public String editarProducto(ProductoDTO producto, RedirectAttributes ra, HttpSession session) {
+        String usuario = (String) session.getAttribute("usuario");
+        productoDAO.editarProducto(producto, usuario);
+        ra.addFlashAttribute("success", "Producto actualizado correctamente.");
         return "redirect:/productos";
     }
 
-    // ELIMINAR
+    // DESACTIVAR (eliminación lógica)
     @PostMapping("/eliminar")
-    public String eliminarProducto(@RequestParam String codigo) {
-        productoDAO.eliminarProducto(codigo);
+    public String eliminarProducto(@RequestParam String codigo, RedirectAttributes ra, HttpSession session) {
+        String usuario = (String) session.getAttribute("usuario");
+        productoDAO.eliminarProducto(codigo, usuario);
+        ra.addFlashAttribute("success", "Producto desactivado correctamente.");
         return "redirect:/productos";
     }
 
@@ -65,12 +70,14 @@ public class ProductoController {
             @RequestParam String descripcion,
             @RequestParam String categoria,
             @RequestParam BigDecimal precio,
-            Model model
+            Model model,
+            RedirectAttributes ra,
+            HttpSession session
     ) {
         try {
-            productoDAO.insertarProducto(
-                    codigo, nombre, descripcion, categoria, precio
-            );
+            String usuario = (String) session.getAttribute("usuario");
+            productoDAO.insertarProducto(codigo, nombre, descripcion, categoria, precio, usuario);
+            ra.addFlashAttribute("success", "Producto registrado correctamente.");
             return "redirect:/productos";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());

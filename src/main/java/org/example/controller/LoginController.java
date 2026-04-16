@@ -30,10 +30,20 @@ public class LoginController {
             Model model,
             HttpSession session
     ) {
-        try {
-            String rol = loginDAO.login(username, password);
+        if (username == null || username.trim().isEmpty()) {
+            model.addAttribute("error", "Debe ingresar el usuario.");
+            return "login";
+        }
 
-            session.setAttribute("usuario", username);
+        if (password == null || password.trim().isEmpty()) {
+            model.addAttribute("error", "Debe ingresar la contrasena.");
+            return "login";
+        }
+
+        try {
+            String rol = loginDAO.login(username.trim(), password);
+
+            session.setAttribute("usuario", username.trim());
             session.setAttribute("rol", rol);
 
             return "redirect:/productos";
